@@ -21,19 +21,20 @@ jobs:
             try {
               const pr = context.payload.pull_request;
               const targetBranch = pr.base.ref;
+              const sourceBranch = pr.head.ref;
               const author = pr.user.login;
               const association = pr.author_association;
               
               const isOwner = association === 'OWNER';
 
-              if (targetBranch !== 'develop' && !isOwner) {
-                console.log(`⚠️ Redirecting PR from ${targetBranch} to develop`);
+              if (targetBranch === 'main' && !isOwner && sourceBranch !== 'develop') {
+                console.log(`⚠️ Redirecting PR from ${targetBranch} to develop for user ${author}`);
                 
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: pr.number,
-                  body: `🤖 **Attention @${author}!** To keep our project organized, all external contributions must target the 'develop' branch. I've automatically updated this PR for you. Thank you! 🚀`
+                  body: `🤖 **Attention @${author}!** To keep our project organized, only the repository owner can target the 'main' branch directly. I've automatically updated your PR to target 'develop' instead. Thank you! 🚀`
                 });
                 
                 await github.rest.pulls.update({
